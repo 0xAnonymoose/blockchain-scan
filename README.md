@@ -58,4 +58,18 @@ OK! contractAddress= 0xe21bba7bb966644248cbf4415241a49d242bdc63
 
 MVP command-line scanner for blocks, transactions and contract
 
-WIP
+### scan a single contract
+
+`node scan.mjs ../blockchain-malware/samples/Rugpull.aifjoanvls/malware.yaml contract 0xE89268d74CB68cca2E60d7bD39Ed68D5cE5D6900`
+
+### scan a file of contracts
+
+`node scan.mjs ../blockchain-malware/samples/Rugpull.aifjoanvls/malware.yaml contract @tests/contract_Rugpull.aifjoanvls`
+
+### scan a block
+
+TODO WIP
+
+### scan a transaction
+
+TODO WIP
