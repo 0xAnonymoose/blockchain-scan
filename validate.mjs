@@ -1,9 +1,8 @@
-import { applySignature, prepareContract, prepareTransaction } from './signature.mjs';
+import { applySignature, prepareContract, downloadTransaction } from './signature.mjs';
 import { readFileSync } from 'fs'
 import { parse } from 'yaml'
-import Web3 from 'web3';
+import web3 from './blockchain.mjs'
 
-const web3 = new Web3("https://bsc-dataseed1.binance.org");
 const argv = process.argv;
 
 (async()=>{
@@ -15,16 +14,14 @@ if (argv.length < 3) {
   let malwares = parse(data);
   
   for (let sig of malwares.signatures) {
-    console.log('---', sig.note);
-    
+    console.log('---', sig.signatureType, ':', sig.note);
+    if (!sig.hasOwnProperty('example')) { continue; }
     for (let ex of sig.example) {
       let sample;
-      // transaction scan
+      // test transaction scan
       if (ex.hasOwnProperty('transactionHash')) {
-        let txn = await web3.eth.getTransaction( ex.transactionHash );
-        let rcpt = await web3.eth.getTransactionReceipt( ex.transactionHash );
       
-        let res = applySignature( sig, prepareTransaction(txn, rcpt) );
+        let res = applySignature( sig, await downloadTransaction(ex.transactionHash) );
         if (res.match) {
           console.log('OK! transactionHash=', ex.transactionHash);
           
@@ -39,8 +36,9 @@ if (argv.length < 3) {
           console.error('FAIL transactionHash=', ex.transactionHash, JSON.stringify(res));
         }
       }
-      // contract scan
-      else if (ex.hasOwnProperty('contractAddress')) { 
+      
+      // test contract scan
+      if (ex.hasOwnProperty('contractAddress')) { 
         let code = await web3.eth.getCode( ex.contractAddress );
 
         let res = applySignature( sig, prepareContract(ex.contractAddress, code) );
@@ -50,11 +48,7 @@ if (argv.length < 3) {
           console.error('FAIL contractAddress=', ex.contractAddress, JSON.stringify(res));
         }
       }
-      // unknown example type
-      else {
-        console.error('FAIL unknown example type');
-        return;
-      }
+
     }
   
   }
