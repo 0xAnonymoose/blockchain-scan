@@ -68,8 +68,23 @@ MVP command-line scanner for blocks, transactions and contract
 
 ### scan a block
 
-TODO WIP
+`node scan.mjs ../blockchain-malware/samples/Rugpull.aifjoanvls/malware.yaml block 18774457`
 
 ### scan a transaction
 
-TODO WIP
+`node scan.mjs ../blockchain-malware/samples/Rugpull.aifjoanvls/malware.yaml transaction 0x896be5e7ba3bb6041e698a8e83ad49cea947f5f6e631033ccc225b46b3bc951f`
+
+Sample output:
+
+```
+Fetching 1 transactions
+0x896be5e7ba3bb6041e698a8e83ad49cea947f5f6e631033ccc225b46b3bc951f
+0x7fa1a7b22c9b45a1f3c7f354f797a9294f352816  MATCHED  Rugpull.aifjoanvls [ 'backdoor.mint' ]
+{
+  detectedSchema: 'malware',
+  match: true,
+  transactionHash: '0x896be5e7ba3bb6041e698a8e83ad49cea947f5f6e631033ccc225b46b3bc951f',
+  contractAddress: '0x7fa1a7b22c9b45a1f3c7f354f797a9294f352816'
+}
+Scan found 1 matches in 1 targets
+```

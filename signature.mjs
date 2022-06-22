@@ -54,6 +54,10 @@ function applySignature(signature, object) {
   for (let key of Object.keys(signature.filter)) {
     let v = signature.filter[key];
     
+    if (!object.hasOwnProperty(key)) {
+      return { match: false, type: 'exists', key }
+    }
+    
     if (typeof v === 'object' && v !== null) {
       // hash check
       let {length, checksum, hashOffset, hashLength} = v;

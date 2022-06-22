@@ -1,4 +1,4 @@
-import { applySignature, prepareContract, prepareTransaction } from './signature.mjs';
+import { applySignature, prepareContract, downloadTransaction } from './signature.mjs';
 import { readFileSync } from 'fs'
 import { parse } from 'yaml'
 import Web3 from 'web3';
@@ -20,7 +20,6 @@ if (argv.length < 5) {
   let arg = argv[4];
 
   let targets = [];
-  let signatureType = (op === 'contract') ? op : 'transaction';
     
   if (op === 'contract') {
     let addrs = [arg];
@@ -50,19 +49,23 @@ if (argv.length < 5) {
     // load transactions
     console.log('Fetching',transactions.length,'transactions');
     for (let txnHash of transactions) {
-      let txn = await web3.eth.getTransaction( txnHash );
-      let rcpt = await web3.eth.getTransactionReceipt( txnHash );
-      targets.push( prepareTransaction(txn, rcpt) );
+      console.log(txnHash);
+      try {
+        targets.push( await downloadTransaction(txnHash) );
+      } catch(e) {
+        console.error('SKIPPED:', e);
+      }
     }
   }
    
   if (targets.length === 0) {
     console.error('Unknown scan operation', argv[4],'or nothing to scan.');
   } else {
+    let hits = 0;
     for (let target of targets) {
       let match = false;
       for (let sig of malwares.signatures) {
-        if (sig.signatureType !== signatureType) { continue; }
+        if (sig.signatureType == 'source') { continue; }
         let res = applySignature( sig, target );
         if (res.match) {
           console.error(target.contractAddress || target.transactionHash, ' MATCHED ',malwares.malwareName, malwares.malwareTags);       
@@ -72,8 +75,12 @@ if (argv.length < 5) {
       }
       if (!match) {
         console.log(target.contractAddress || target.transactionHash, 'clean');
+      } else {
+        hits++;
       }
     }
+    
+    console.log('Scan found',hits,'matches in',targets.length,'targets');
   }
   
 }
