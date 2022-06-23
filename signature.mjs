@@ -59,14 +59,23 @@ function applySignature(signature, object) {
     }
     
     if (typeof v === 'object' && v !== null) {
-      // hash check
-      let {length, checksum, hashOffset, hashLength} = v;
-      if (object[key].length != length) {
-        return { match: false, type: 'length', key, svalue: length, value: object[key].length }
+      // method check
+      if (v.startsWith) {
+        let ostart = object[key].substring(0, v.startsWith.length);
+        if (ostart != v.startsWith) {
+          return { match: false, type: 'startsWith', key, svalue: v.startsWith, value: ostart }
+        }
       }
-      let dchecksum = computeChecksum( object[key], hashOffset, hashLength );
-      if (dchecksum !== checksum) {
-        return { match: false, type: 'checksum', key, svalue: checksum, value: dchecksum }
+      // hash check      
+      if (v.checksum) {
+        let {length, checksum, hashOffset, hashLength} = v;
+        if (object[key].length != length) {
+          return { match: false, type: 'length', key, svalue: length, value: object[key].length }
+        }
+        let dchecksum = computeChecksum( object[key], hashOffset, hashLength );
+        if (dchecksum !== checksum) {
+          return { match: false, type: 'checksum', key, svalue: checksum, value: dchecksum }
+        }
       }
     } else {
       // value check
