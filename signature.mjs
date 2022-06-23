@@ -1,9 +1,9 @@
 import { createHash } from 'crypto'
 import web3 from './blockchain.mjs'
 
-function computeChecksum(data, hashOffset = 0, hashLength) {
-   if (hashLength === undefined) { hashLength = data.length; }
-   let slice = data.substring( hashOffset, hashLength );
+function computeChecksum(data, hashOffset = 0, hashEnd) {
+   if (hashEnd === undefined) { hashEnd = data.length; }
+   let slice = data.substring( hashOffset, hashEnd );
    return createHash('sha256').update(slice).digest('hex');
 }
 
@@ -67,15 +67,21 @@ function applySignature(signature, object) {
         }
       }
       // hash check      
-      if (v.checksum) {
-        let {length, checksum, hashOffset, hashLength} = v;
+      else if (v.checksums) {
+        let {length, checksums} = v;
         if (object[key].length != length) {
           return { match: false, type: 'length', key, svalue: length, value: object[key].length }
         }
-        let dchecksum = computeChecksum( object[key], hashOffset, hashLength );
-        if (dchecksum !== checksum) {
-          return { match: false, type: 'checksum', key, svalue: checksum, value: dchecksum }
+        for (let chk of checksums) {
+          let dchecksum = computeChecksum( object[key], chk.offset, chk.end );
+          if (dchecksum !== chk.sha256) {
+            return { match: false, type: 'checksum', key, svalue: chk.sha256, value: dchecksum }
+          }
         }
+      }
+      // bad check?
+      else {
+        return { match: false, type: 'bad_check' }
       }
     } else {
       // value check
