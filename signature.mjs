@@ -36,6 +36,12 @@ function prepareTransaction(txn, receipt, code) {
   return tcopy;
 }
 
+/* Download contract from blockchain helper */
+async function downloadContract( addr ) {
+  let code = await web3.eth.getCode( addr );
+  return prepareContract( addr, code);
+}
+
 /* Download transaction from blockchain helper */
 async function downloadTransaction( txnHash ) {
    let txn = await web3.eth.getTransaction( txnHash );
@@ -106,4 +112,4 @@ function applySignature(signature, object) {
   
 }
 
-export { applySignature, prepareContract, prepareTransaction, downloadTransaction };
+export { applySignature, prepareContract, prepareTransaction, downloadTransaction, downloadContract };
