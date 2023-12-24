@@ -1,19 +1,18 @@
 import { createHash } from 'crypto'
-import web3 from './blockchain.mjs'
 
-function computeChecksum(data, hashOffset = 0, hashEnd) {
+export function computeChecksum(data, hashOffset = 0, hashEnd) {
    if (hashEnd === undefined) { hashEnd = data.length; }
    let slice = data.substring( hashOffset, hashEnd );
    return createHash('sha256').update(slice).digest('hex');
 }
 
 /* To scan a contract, provide it's address and getCode result */
-function prepareContract(contractAddress, code) {
+export function prepareContract(contractAddress, code) {
   return {contractAddress, code};
 }
 
 /* To scan a transaction, provide transaction and receipt */
-function prepareTransaction(txn, receipt, code) {
+export function prepareTransaction(txn, receipt, code, source) {
   function lcStrings(x) { return typeof x === 'string' ? x.toLowerCase() : x; }
   
   // duplicate the transaction object, lowrecase all strings
@@ -32,29 +31,16 @@ function prepareTransaction(txn, receipt, code) {
   if (code) {
     tcopy.code = code;
   }
+  if (source) {
+    tcopy.source = source;
+  }
   
   return tcopy;
 }
 
-/* Download contract from blockchain helper */
-async function downloadContract( addr ) {
-  let code = await web3.eth.getCode( addr );
-  return prepareContract( addr, code);
-}
-
-/* Download transaction from blockchain helper */
-async function downloadTransaction( txnHash ) {
-   let txn = await web3.eth.getTransaction( txnHash );
-   let rcpt = await web3.eth.getTransactionReceipt( txnHash );
-   let code = null;   
-   if (rcpt.contractAddress && txn.to === null) {
-     code = await web3.eth.getCode( rcpt.contractAddress );
-   }
-   return prepareTransaction(txn, rcpt, code);
-}
 
 /* Scanner entrypoint, returns false if signature did not match otherwise a result object */
-function applySignature(signature, object) {
+export function applySignature(signature, object) {
 
   // Step 1: apply filter to object
   for (let key of Object.keys(signature.filter)) {
@@ -111,5 +97,3 @@ function applySignature(signature, object) {
   return r;
   
 }
-
-export { applySignature, prepareContract, prepareTransaction, downloadTransaction, downloadContract };

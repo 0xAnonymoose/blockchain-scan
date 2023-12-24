@@ -1,10 +1,26 @@
 import { applySignature, prepareContract, downloadTransaction } from './signature.mjs';
 import { readFileSync, writeFileSync } from 'fs'
 import { parse } from 'yaml'
-import Web3 from 'web3';
+import { web3} from './blockchain.mjs';
 
-const web3 = new Web3("https://bsc-dataseed1.binance.org");
 const argv = process.argv;
+
+/* Download contract from blockchain helper */
+async function downloadContract( addr ) {
+  let code = await web3.eth.getCode( addr );
+  return prepareContract( addr, code);
+}
+
+/* Download transaction from blockchain helper */
+async function downloadTransaction( txnHash ) {
+   let txn = await web3.eth.getTransaction( txnHash );
+   let rcpt = await web3.eth.getTransactionReceipt( txnHash );
+   let code = null;   
+   if (rcpt.contractAddress && txn.to === null) {
+     code = await web3.eth.getCode( rcpt.contractAddress );
+   }
+   return prepareTransaction(txn, rcpt, code);
+}
 
 function _saveCache(fname, data) { 
   writeFileSync(fname, data);
@@ -117,7 +133,7 @@ if (argv.length < 5) {
         if (deploys.contracts[target.contractAddress]) { 
           target._expected = deploys.contracts[target.contractAddress];
         } else {
-          target._expected = { match: true };
+          target._expected = { };
         }
       }      
     }
@@ -136,7 +152,7 @@ if (argv.length < 5) {
         if (sig.signatureType == 'source') { continue; }
         res = applySignature( sig, target );
         if (res.match) {
-          console.error(target.contractAddress || target.transactionHash, ' MATCHED ',malwares.malwareName, malwares.malwareTags, JSON.stringify(res));       
+          console.error(' MATCHED ',malwares.malwareName, malwares.malwareTags, JSON.stringify(res));       
           match = true;
           break;
         }
